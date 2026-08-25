@@ -42,7 +42,7 @@ The environment maps naturally to PrimeRL's environment model: a generated task 
 
 - [Run the Colab notebook](./the_scientist_colab.ipynb)
 - [View the private Environment Hub release](https://app.primeintellect.ai/dashboard/environments/ritwikraha/the-scientist)
-- Pull version `0.1.0` with `prime env pull ritwikraha/the-scientist@0.1.0`
+- Pull version `0.2.0` with `prime env pull ritwikraha/the-scientist@0.2.0`
 
 ![A rendered Level-3 universe](./artifacts/the_scientist_level3.png)
 
@@ -59,9 +59,13 @@ Run an evaluation after configuring a model provider:
 
 ```bash
 prime eval run the-scientist -n 10 -r 3
+
+# Raw base models can use the text laboratory without native tool calling.
+prime eval run the-scientist -n 10 -r 3 \
+  --env-args '{"protocol":"text"}'
 ```
 
-Environment arguments include `level`, `num_train`, `num_eval`, `seed`, `budget`, `domain_min`, and `domain_max`.
+Environment arguments include `level`, `num_train`, `num_eval`, `seed`, `budget`, `domain_min`, `domain_max`, and `protocol` (`native`, `text`, or `both`).
 
 ## Status
 
@@ -134,7 +138,7 @@ An episode samples a hidden universe `U` and exposes an input domain `X`. At ste
 
 ### Interaction protocol
 
-The MVP exposes one stateful tool:
+The native protocol exposes one stateful tool:
 
 ```json
 {
@@ -148,6 +152,20 @@ The response is deliberately narrow:
 ```json
 {"y": 2.0, "experiments_remaining": 5}
 ```
+
+Raw base models can instead use `protocol="text"`, which sends no native tool schema. One line triggers one call through the same simulator and budget checks:
+
+```text
+EXPERIMENT x1=1 x2=0
+```
+
+The lab responds as an ordinary message:
+
+```text
+LAB RESULT {"y": 2.0, "duplicate": false, "experiments_remaining": 5}
+```
+
+`protocol="both"` accepts either representation. Text-only mode stops generation at the first newline, and only the first complete text command is executed per turn, so a base model cannot hallucinate an entire multi-step transcript in one action.
 
 The final response must contain exactly one object:
 

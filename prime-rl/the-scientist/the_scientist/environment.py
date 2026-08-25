@@ -6,11 +6,13 @@ import ast
 import json
 import math
 import random
+import re
 from collections.abc import Mapping
 from typing import Any
 
 import verifiers as vf
 from datasets import Dataset
+from verifiers.types import UserMessage
 
 Exponent = tuple[int, int]
 Polynomial = dict[Exponent, float]
@@ -23,6 +25,11 @@ BASES: dict[int, tuple[Exponent, ...]] = {
 }
 FAMILY_NAMES = {1: "affine", 2: "additive_polynomial", 3: "interaction_polynomial"}
 COEFFICIENTS = (-3, -2, -1, 1, 2, 3)
+PROTOCOLS = ("native", "text", "both")
+TEXT_EXPERIMENT_PATTERN = re.compile(
+    r"^[ \t]*EXPERIMENT[ \t]+x1[ \t]*=[ \t]*([+-]?\d+)[ \t]+x2[ \t]*=[ \t]*([+-]?\d+)[ \t]*$",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 
 def _clean(poly: Polynomial) -> Polynomial:
@@ -157,17 +164,39 @@ def generate_universe(level: int, seed: int, budget: int, domain: tuple[int, int
     }
 
 
-def _prompt(level: int, budget: int, domain: tuple[int, int]) -> str:
+def parse_text_experiment(content: Any) -> tuple[int, int] | None:
+    """Parse the first complete plain-text laboratory command."""
+    if not isinstance(content, str):
+        return None
+    match = TEXT_EXPERIMENT_PATTERN.search(content)
+    if match is None:
+        return None
+    return int(match.group(1)), int(match.group(2))
+
+
+def _prompt(level: int, budget: int, domain: tuple[int, int], protocol: str) -> str:
     family_hint = {
         1: "an affine law using 1, x1, and x2",
         2: "an additive polynomial using 1, x1, x2, x1**2, and x2**2",
         3: "a degree-two polynomial that may also contain x1*x2",
     }[level]
+    if protocol == "native":
+        experiment_instructions = "Use the experiment tool to choose informative measurements."
+    elif protocol == "text":
+        experiment_instructions = """To run an experiment, reply with only one line in this exact format:
+EXPERIMENT x1=<integer> x2=<integer>
+The laboratory will return the measurement. Run at most one experiment per reply."""
+    else:
+        experiment_instructions = """Use the experiment tool, or reply with only one plain-text command in this exact format:
+EXPERIMENT x1=<integer> x2=<integer>
+Run at most one experiment per reply."""
     return f"""You are The Scientist. A hidden deterministic universe maps integer inputs x1 and x2 to y.
 
 This is Level {level}: the law is {family_hint}. Coefficients are small integers. Inputs must be integers in [{domain[0]}, {domain[1]}]. You have at most {budget} laboratory experiments.
 
-Use the experiment tool to choose informative measurements. When ready, stop calling tools and reply with only one JSON object:
+{experiment_instructions}
+
+When ready, stop experimenting and reply with only one JSON object:
 {{"family":"{FAMILY_NAMES[level]}","equation":"your expression","confidence":0.0}}
 
 Allowed equation syntax: x1, x2, numbers, +, -, *, and powers **0 through **2. Do not include markdown fences."""
@@ -180,6 +209,7 @@ def build_dataset(
     split: str,
     budget: int,
     domain: tuple[int, int],
+    protocol: str,
 ) -> Dataset:
     split_offset = {"train": 0, "eval": 1_000_000, "test": 2_000_000}.get(split)
     if split_offset is None:
@@ -190,7 +220,7 @@ def build_dataset(
         universe = generate_universe(level, universe_seed, budget, domain)
         rows.append(
             {
-                "question": _prompt(level, budget, domain),
+                "question": _prompt(level, budget, domain, protocol),
                 "answer": json.dumps(universe, sort_keys=True),
                 "info": {"split": split, "universe_id": f"{split}-{level}-{universe_seed}"},
             }
@@ -292,16 +322,30 @@ async def duplicate_query_rate(state: vf.State) -> float:
     return sum(bool(item.get("duplicate")) for item in observations) / len(observations)
 
 
+async def text_experiment_calls(state: vf.State) -> float:
+    return float(state.get("text_experiment_calls", 0))
+
+
 class ScientistEnv(vf.StatefulToolEnv):
     """A per-rollout hidden universe with a strictly budgeted experiment tool."""
 
-    def __init__(self, *, budget: int, domain: tuple[int, int], **kwargs: Any):
+    def __init__(
+        self, *, budget: int, domain: tuple[int, int], protocol: str = "native", **kwargs: Any
+    ):
+        if protocol not in PROTOCOLS:
+            raise ValueError(f"protocol must be one of {', '.join(PROTOCOLS)}")
         self.budget = budget
         self.domain = domain
+        self.protocol = protocol
+        if protocol == "text":
+            sampling_args = dict(kwargs.pop("sampling_args", {}) or {})
+            sampling_args.setdefault("stop", ["\n"])
+            kwargs["sampling_args"] = sampling_args
         rubric = vf.Rubric(funcs=[hidden_probe_score, structure_score], weights=[0.8, 0.2])
         rubric.add_metric(valid_final_answer)
         rubric.add_metric(experiments_used)
         rubric.add_metric(duplicate_query_rate)
+        rubric.add_metric(text_experiment_calls)
         super().__init__(
             tools=[],
             rubric=rubric,
@@ -310,6 +354,8 @@ class ScientistEnv(vf.StatefulToolEnv):
             **kwargs,
         )
         self.add_tool(self.experiment, args_to_skip=["lab_state"])
+        if protocol == "text":
+            self.tool_defs = []
 
     async def setup_state(self, state: vf.State) -> vf.State:
         state = await super().setup_state(state) or state
@@ -320,7 +366,43 @@ class ScientistEnv(vf.StatefulToolEnv):
             "domain": tuple(int(value) for value in truth["domain"]),
             "observations": [],
         }
+        state["text_experiment_calls"] = 0
         return state
+
+    @vf.stop
+    async def no_tools_called(self, state: vf.State) -> bool:
+        if len(state["trajectory"]) == 0:
+            return False
+        last_message = state["trajectory"][-1]["completion"][-1]
+        if last_message.role != "assistant":
+            return False
+        if getattr(last_message, "tool_calls", None):
+            return False
+        if self.protocol in ("text", "both"):
+            experiment_args = parse_text_experiment(last_message.content)
+            if experiment_args is not None:
+                state["pending_text_experiment"] = experiment_args
+                return False
+        return True
+
+    async def env_response(
+        self, messages: vf.Messages, state: vf.State, **kwargs: Any
+    ) -> vf.Messages:
+        last_message = messages[-1]
+        if getattr(last_message, "tool_calls", None):
+            return await super().env_response(messages, state, **kwargs)
+        pending = state.pop("pending_text_experiment", None)
+        if pending is None:
+            raise ValueError("Missing pending text experiment")
+        x1, x2 = pending
+        result = self.experiment(x1, x2, state["lab_state"])
+        state["text_experiment_calls"] = int(state["text_experiment_calls"]) + 1
+        return [
+            UserMessage(
+                role="user",
+                content=f"LAB RESULT {result}\nRun another experiment or submit the final JSON object.",
+            )
+        ]
 
     def update_tool_args(
         self,
@@ -380,6 +462,7 @@ def load_environment(
     budget: int = 6,
     domain_min: int = -3,
     domain_max: int = 3,
+    protocol: str = "native",
 ) -> vf.Environment:
     """Load The Scientist environment.
 
@@ -391,15 +474,19 @@ def load_environment(
         budget: Maximum experiments per episode.
         domain_min: Inclusive lower bound for integer experiment inputs.
         domain_max: Inclusive upper bound for integer experiment inputs.
+        protocol: Interaction mode: native tool calls, plain text, or both.
     """
     if budget < 1:
         raise ValueError("budget must be positive")
     if domain_min >= domain_max:
         raise ValueError("domain_min must be smaller than domain_max")
+    if protocol not in PROTOCOLS:
+        raise ValueError(f"protocol must be one of {', '.join(PROTOCOLS)}")
     domain = (domain_min, domain_max)
     return ScientistEnv(
         budget=budget,
         domain=domain,
-        dataset=build_dataset(level, num_train, seed, "train", budget, domain),
-        eval_dataset=build_dataset(level, num_eval, seed, "eval", budget, domain),
+        protocol=protocol,
+        dataset=build_dataset(level, num_train, seed, "train", budget, domain, protocol),
+        eval_dataset=build_dataset(level, num_eval, seed, "eval", budget, domain, protocol),
     )

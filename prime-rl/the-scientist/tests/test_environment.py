@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import pytest
+from verifiers.types import AssistantMessage, UserMessage
 
 from the_scientist.environment import (
     ScientistEnv,
@@ -12,6 +13,7 @@ from the_scientist.environment import (
     hidden_probe_score,
     load_environment,
     parse_polynomial,
+    parse_text_experiment,
     structure_score,
 )
 
@@ -29,6 +31,29 @@ def test_parser_accepts_equivalent_polynomials():
 def test_parser_rejects_unsafe_or_unsupported_syntax(expression):
     with pytest.raises((ValueError, SyntaxError)):
         parse_polynomial(expression)
+
+
+def test_text_experiment_parser_accepts_one_strict_command():
+    assert parse_text_experiment("EXPERIMENT x1=-2 x2=3") == (-2, 3)
+    assert parse_text_experiment("thinking\n  experiment x1 = +1 x2 = 0  \n") == (1, 0)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "EXPERIMENT x1=1",
+        "EXPERIMENT x1=1 x2=2 extra=true",
+        "EXPERIMENT x1=1.5 x2=2",
+        {"x1": 1, "x2": 2},
+    ],
+)
+def test_text_experiment_parser_rejects_malformed_commands(content):
+    assert parse_text_experiment(content) is None
+
+
+def test_text_experiment_parser_uses_only_first_complete_command():
+    content = "EXPERIMENT x1=1 x2=2\nEXPERIMENT x1=2 x2=1"
+    assert parse_text_experiment(content) == (1, 2)
 
 
 def test_universe_is_reproducible_and_canonical():
@@ -65,6 +90,48 @@ def test_laboratory_enforces_budget_and_records_duplicates():
     assert second["duplicate"] is True
     assert exhausted["error"] == "experiment budget exhausted"
     assert lab_state["remaining"] == 0
+
+
+def test_text_protocol_executes_experiment_without_native_tool_schema():
+    env = load_environment(level=1, num_train=1, num_eval=1, seed=9, budget=2, protocol="text")
+    universe = generate_universe(level=1, seed=9, budget=2, domain=(-3, 3))
+    assistant = AssistantMessage(role="assistant", content="EXPERIMENT x1=1 x2=0")
+    state = {
+        "answer": json.dumps(universe),
+        "trajectory": [{"completion": [assistant]}],
+    }
+    asyncio.run(env.setup_state(state))
+
+    assert env.tool_defs == []
+    assert env.sampling_args["stop"] == ["\n"]
+    assert asyncio.run(env.no_tools_called(state)) is False
+    response = asyncio.run(env.env_response([assistant], state))
+
+    assert isinstance(response[0], UserMessage)
+    assert '"experiments_remaining": 1' in response[0].content
+    assert state["text_experiment_calls"] == 1
+    assert len(state["lab_state"]["observations"]) == 1
+
+
+def test_text_protocol_stops_for_final_json():
+    env = load_environment(num_train=1, num_eval=1, protocol="text")
+    assistant = AssistantMessage(
+        role="assistant",
+        content='{"family":"affine","equation":"x1+x2","confidence":0.5}',
+    )
+    state = {"trajectory": [{"completion": [assistant]}]}
+    assert asyncio.run(env.no_tools_called(state)) is True
+
+
+def test_native_protocol_keeps_tool_schema():
+    env = load_environment(num_train=1, num_eval=1, protocol="native")
+    assert env.tool_defs is not None
+    assert [tool.name for tool in env.tool_defs] == ["experiment"]
+
+
+def test_environment_rejects_unknown_protocol():
+    with pytest.raises(ValueError, match="protocol must be one of"):
+        load_environment(num_train=1, num_eval=1, protocol="carrier-pigeon")
 
 
 def test_invalid_experiment_consumes_budget():
