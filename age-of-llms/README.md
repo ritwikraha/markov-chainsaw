@@ -2,6 +2,15 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ritwikraha/markov-chainsaw/blob/age-of-llms/age-of-llms/notebooks/age_of_empires_with_gemma.ipynb)
 
+[![Open exp-rts-001 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ritwikraha/markov-chainsaw/blob/age-of-llms/age-of-llms/notebooks/exp_rts_001_thousand_turn_match.ipynb)
+
+## Experiment index
+
+- IDs use `exp-rts-NNN-description`.
+- `NNN` defines the run order.
+- Each experiment has one Markdown report in [`experiments/`](./experiments/).
+- [`exp-rts-001-thousand-turn-match`](./experiments/exp-rts-001-thousand-turn-match.md): fresh Spartan start, 1,000 RL turns, final player comparison, complete native replay capture.
+
 ## Result
 
 - Connected `google/gemma-4-E2B-it` to the real 0 A.D. Release 28 Pyrogenesis engine.
@@ -19,6 +28,19 @@
 - [Colab notebook](./notebooks/age_of_empires_with_gemma.ipynb)
 - [Native gameplay video](./videos/age_of_empires_with_gemma_gameplay.mp4)
 - [0 A.D. Release 28 replay](./replays/age_of_empires_with_gemma_release28_replay.zip)
+
+## Reusable utilities
+
+- [`utils/artifacts.py`](./utils/artifacts.py): checksums and replay ZIP creation.
+- [`utils/experiment_stats.py`](./utils/experiment_stats.py): final player table, turn-limit score, winner selection, result explanation.
+- [`utils/replay_video.py`](./utils/replay_video.py): full native replay capture and 45-second duration fitting.
+
+```python
+from utils import capture_complete_replay, compare_players
+
+outcome = compare_players(state)
+capture = capture_complete_replay(APP_RUN, replay_commands, VIDEO_PATH)
+```
 
 ## Control loop
 
