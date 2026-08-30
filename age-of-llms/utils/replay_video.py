@@ -132,7 +132,7 @@ def capture_complete_replay(
     maximum_final_seconds: int = 45,
     playback_speed: int = 20,
     warmup_seconds: int = 55,
-    renderer_safety_factor: float = 18.0,
+    renderer_safety_factor: float = 20.0,
     tail_seconds: int = 20,
     maximum_capture_seconds: int = 900,
 ) -> ReplayCapture:

@@ -11,7 +11,7 @@ METRIC_LABELS = {
     "phase": "Phase",
     "population": "Population",
     "population_limit": "Population limit",
-    "workers": "Economic workers",
+    "workers": "Economic-capable units",
     "military": "Military units",
     "structures": "Structures",
     "food": "Food",

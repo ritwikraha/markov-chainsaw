@@ -11,6 +11,14 @@
 - Each experiment has one Markdown report in [`experiments/`](./experiments/).
 - [`exp-rts-001-thousand-turn-match`](./experiments/exp-rts-001-thousand-turn-match.md): fresh Spartan start, 1,000 RL turns, final player comparison, complete native replay capture.
 
+### exp-rts-001 result
+
+- Completed all 1,000 RL turns with 40 Gemma decisions and zero parser fallbacks.
+- Petra led at the turn limit, 626.0 to 264.5.
+- Petra reached the town phase and 69 population.
+- Gemma remained in the village phase at 18 of 20 population.
+- The full 599.8-second replay was recorded and fitted into a verified 45-second MP4.
+
 ## Result
 
 - Connected `google/gemma-4-E2B-it` to the real 0 A.D. Release 28 Pyrogenesis engine.
@@ -28,6 +36,10 @@
 - [Colab notebook](./notebooks/age_of_empires_with_gemma.ipynb)
 - [Native gameplay video](./videos/age_of_empires_with_gemma_gameplay.mp4)
 - [0 A.D. Release 28 replay](./replays/age_of_empires_with_gemma_release28_replay.zip)
+- [exp-rts-001 report](./experiments/exp-rts-001-thousand-turn-match.md)
+- [exp-rts-001 notebook](./notebooks/exp_rts_001_thousand_turn_match.ipynb)
+- [exp-rts-001 complete gameplay video](./videos/exp-rts-001-thousand-turn-match.mp4)
+- [exp-rts-001 native replay](./replays/exp-rts-001-thousand-turn-match-release28-replay.zip)
 
 ## Reusable utilities
 
