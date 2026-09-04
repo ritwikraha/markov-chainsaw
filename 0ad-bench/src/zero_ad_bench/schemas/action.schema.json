@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0ad-bench.org/schemas/v0.1/action.schema.json",
+  "title": "0AD-Bench macro action",
+  "type": "object",
+  "required": ["type"],
+  "properties": {
+    "action_id": {"type": "string"},
+    "type": {"enum": ["wait", "gather", "train", "construct", "research", "walk", "scout", "attack", "defend", "retreat"]},
+    "entity_ids": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true},
+    "target_entity_id": {"type": "integer"},
+    "template": {"type": "string"},
+    "count": {"type": "integer", "minimum": 1, "maximum": 50},
+    "position": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "queue": {"type": "boolean"},
+    "reason": {"type": "string", "maxLength": 500}
+  },
+  "allOf": [
+    {"if": {"properties": {"type": {"const": "gather"}}}, "then": {"required": ["entity_ids", "target_entity_id"]}},
+    {"if": {"properties": {"type": {"const": "train"}}}, "then": {"required": ["entity_ids", "template", "count"]}},
+    {"if": {"properties": {"type": {"const": "construct"}}}, "then": {"required": ["entity_ids", "template", "position"]}},
+    {"if": {"properties": {"type": {"enum": ["walk", "scout", "retreat"]}}}, "then": {"required": ["entity_ids", "position"]}},
+    {"if": {"properties": {"type": {"enum": ["attack", "defend"]}}}, "then": {"required": ["entity_ids", "target_entity_id"]}},
+    {"if": {"properties": {"type": {"const": "research"}}}, "then": {"required": ["entity_ids", "template"]}}
+  ],
+  "additionalProperties": false
+}

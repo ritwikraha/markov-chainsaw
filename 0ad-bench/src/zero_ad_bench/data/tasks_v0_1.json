@@ -1,0 +1,406 @@
+{
+  "benchmark_version": "0.1",
+  "defaults": {
+    "version": "0.1",
+    "split": "development",
+    "tracks": ["symbolic", "hybrid"],
+    "scenario": {
+      "fixture": "fresh-village",
+      "map": "maps/scenarios/arcadia",
+      "seed": 100,
+      "player_civ": "spart",
+      "opponent": {"type": "petra", "difficulty": 3, "behavior": "balanced"}
+    },
+    "budget": {
+      "max_steps": 300,
+      "decision_interval": 10,
+      "max_agent_actions": 30,
+      "max_tokens": 30000,
+      "max_mean_latency_ms": 5000
+    },
+    "goal": {"terminate_on_success": true},
+    "perturbations": [],
+    "tags": []
+  },
+  "tasks": [
+    {
+      "id": "econ-001", "category": "economy", "title": "Wood stockpile",
+      "description": "Accumulate at least 500 wood from a fresh village start.",
+      "scenario": {"seed": 101},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resources.wood", "op": "gte", "value": 500}]},
+      "tags": ["resource", "wood"]
+    },
+    {
+      "id": "econ-002", "category": "economy", "title": "Food stockpile",
+      "description": "Accumulate at least 500 food from a fresh village start.",
+      "scenario": {"seed": 102},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resources.food", "op": "gte", "value": 500}]},
+      "tags": ["resource", "food"]
+    },
+    {
+      "id": "econ-003", "category": "economy", "title": "Stone stockpile",
+      "description": "Accumulate at least 450 stone while keeping the civilization active.",
+      "scenario": {"seed": 103},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resources.stone", "op": "gte", "value": 450}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["resource", "stone"]
+    },
+    {
+      "id": "econ-004", "category": "economy", "title": "Metal stockpile",
+      "description": "Accumulate at least 450 metal while keeping the civilization active.",
+      "scenario": {"seed": 104},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resources.metal", "op": "gte", "value": 450}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["resource", "metal"]
+    },
+    {
+      "id": "econ-005", "category": "economy", "title": "Balanced reserves",
+      "description": "Maintain at least 300 food and 300 wood at the episode endpoint.",
+      "scenario": {"seed": 105},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resources.food", "op": "gte", "value": 300}, {"path": "player.resources.wood", "op": "gte", "value": 300}]},
+      "tags": ["resource", "balance"]
+    },
+    {
+      "id": "econ-006", "category": "economy", "title": "Population growth",
+      "description": "Grow the civilization to at least 20 population without defeat.",
+      "scenario": {"seed": 106},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.population.used", "op": "gte", "value": 20}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["population", "training"]
+    },
+    {
+      "id": "econ-007", "category": "economy", "title": "Food workforce",
+      "description": "Assign at least eight gatherers to food production.",
+      "scenario": {"seed": 107},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resource_gatherers.food", "op": "gte", "value": 8}]},
+      "tags": ["workers", "food"]
+    },
+    {
+      "id": "econ-008", "category": "economy", "title": "Wood workforce",
+      "description": "Assign at least eight gatherers to wood production.",
+      "scenario": {"seed": 108},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resource_gatherers.wood", "op": "gte", "value": 8}]},
+      "tags": ["workers", "wood"]
+    },
+    {
+      "id": "econ-009", "category": "economy", "title": "Four-resource economy",
+      "description": "Use workers on food, wood, stone, and metal during one episode.",
+      "scenario": {"seed": 109},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resource_gatherers.food", "op": "gte", "value": 1, "scope": "max"}, {"path": "player.resource_gatherers.wood", "op": "gte", "value": 1, "scope": "max"}, {"path": "player.resource_gatherers.stone", "op": "gte", "value": 1, "scope": "max"}, {"path": "player.resource_gatherers.metal", "op": "gte", "value": 1, "scope": "max"}]},
+      "tags": ["workers", "allocation"]
+    },
+    {
+      "id": "econ-010", "split": "evaluation", "category": "economy", "title": "Sustained expansion",
+      "description": "Reach 30 population and a population limit of at least 40.",
+      "scenario": {"seed": 110},
+      "budget": {"max_steps": 500, "max_agent_actions": 50, "max_tokens": 50000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.population.used", "op": "gte", "value": 30}, {"path": "player.population.limit", "op": "gte", "value": 40}]},
+      "tags": ["population", "long-horizon"]
+    },
+
+    {
+      "id": "tech-001", "category": "building-tech", "title": "Build a house",
+      "description": "Complete at least one additional house from the fresh start.",
+      "scenario": {"seed": 201},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.house", "op": "gte", "value": 1}]},
+      "tags": ["construction", "house"]
+    },
+    {
+      "id": "tech-002", "category": "building-tech", "title": "Build a barracks",
+      "description": "Complete a barracks and keep it standing through the endpoint.",
+      "scenario": {"seed": 202},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.barracks", "op": "gte", "value": 1}]},
+      "tags": ["construction", "military"]
+    },
+    {
+      "id": "tech-003", "category": "building-tech", "title": "Build a storehouse",
+      "description": "Complete a storehouse near an available resource cluster.",
+      "scenario": {"seed": 203},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.storehouse", "op": "gte", "value": 1}]},
+      "tags": ["construction", "economy"]
+    },
+    {
+      "id": "tech-004", "category": "building-tech", "title": "Build a farmstead",
+      "description": "Complete a farmstead and retain an active civilization.",
+      "scenario": {"seed": 204},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.farmstead", "op": "gte", "value": 1}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["construction", "economy"]
+    },
+    {
+      "id": "tech-005", "category": "building-tech", "title": "Train ten infantry",
+      "description": "Build the production capacity and field at least ten infantry.",
+      "scenario": {"seed": 205},
+      "budget": {"max_steps": 450, "max_agent_actions": 45, "max_tokens": 45000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.statistics.infantry_trained", "op": "gte", "value": 10}]},
+      "tags": ["training", "military"]
+    },
+    {
+      "id": "tech-006", "category": "building-tech", "title": "Reach town phase",
+      "description": "Advance from village phase to town phase within the budget.",
+      "scenario": {"seed": 206},
+      "budget": {"max_steps": 700, "max_agent_actions": 70, "max_tokens": 70000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.phase", "op": "eq", "value": "town"}]},
+      "tags": ["technology", "phase"]
+    },
+    {
+      "id": "tech-007", "category": "building-tech", "title": "Research economy technology",
+      "description": "Complete one economic technology research item.",
+      "scenario": {"fixture": "village-with-storehouse", "seed": 207},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.statistics.economic_technologies", "op": "gte", "value": 1}]},
+      "tags": ["technology", "economy"]
+    },
+    {
+      "id": "tech-008", "category": "building-tech", "title": "Town infrastructure",
+      "description": "Reach town phase with a barracks and at least three houses.",
+      "scenario": {"seed": 208},
+      "budget": {"max_steps": 800, "max_agent_actions": 80, "max_tokens": 80000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.phase", "op": "eq", "value": "town"}, {"path": "player.structures.barracks", "op": "gte", "value": 1}, {"path": "player.structures.house", "op": "gte", "value": 3}]},
+      "tags": ["technology", "construction", "compositional"]
+    },
+    {
+      "id": "tech-009", "category": "building-tech", "title": "Build a market",
+      "description": "Advance as required and complete a market structure.",
+      "scenario": {"fixture": "town-ready", "seed": 209},
+      "budget": {"max_steps": 500, "max_agent_actions": 50, "max_tokens": 50000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.market", "op": "gte", "value": 1}]},
+      "tags": ["construction", "town"]
+    },
+    {
+      "id": "tech-010", "split": "evaluation", "category": "building-tech", "title": "Fortified settlement",
+      "description": "Complete a defensive tower and maintain at least 30 population capacity.",
+      "scenario": {"fixture": "town-ready", "seed": 210},
+      "budget": {"max_steps": 500, "max_agent_actions": 50, "max_tokens": 50000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.defense_tower", "op": "gte", "value": 1}, {"path": "player.population.limit", "op": "gte", "value": 30}]},
+      "tags": ["construction", "defense"]
+    },
+
+    {
+      "id": "scout-001", "category": "scouting", "title": "Reveal nearby terrain",
+      "description": "Explore at least 20 percent of the map within the time budget.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "fogged-village", "seed": 301},
+      "goal": {"aggregation": "all", "predicates": [{"path": "map.explored_fraction", "op": "gte", "value": 0.2}]},
+      "tags": ["fog-of-war", "exploration"]
+    },
+    {
+      "id": "scout-002", "category": "scouting", "title": "Locate the opponent",
+      "description": "Reveal at least one opposing structure through scouting.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "fogged-village", "seed": 302},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.visible_structure_count", "op": "gte", "value": 1, "scope": "max"}]},
+      "tags": ["fog-of-war", "opponent"]
+    },
+    {
+      "id": "scout-003", "category": "scouting", "title": "Locate metal",
+      "description": "Discover an unclaimed metal resource node outside the starting base.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "fogged-village", "seed": 303},
+      "goal": {"aggregation": "all", "predicates": [{"path": "map.discovered_resources.metal", "op": "gte", "value": 1}]},
+      "tags": ["fog-of-war", "resource"]
+    },
+    {
+      "id": "scout-004", "category": "scouting", "title": "Locate stone",
+      "description": "Discover an unclaimed stone resource node outside the starting base.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "fogged-village", "seed": 304},
+      "goal": {"aggregation": "all", "predicates": [{"path": "map.discovered_resources.stone", "op": "gte", "value": 1}]},
+      "tags": ["fog-of-war", "resource"]
+    },
+    {
+      "id": "scout-005", "category": "scouting", "title": "Map half the arena",
+      "description": "Explore at least half of the map while keeping the scout alive.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "dedicated-scout", "seed": 305},
+      "budget": {"max_steps": 500, "max_agent_actions": 50, "max_tokens": 50000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "map.explored_fraction", "op": "gte", "value": 0.5}, {"path": "player.statistics.scouts_alive", "op": "gte", "value": 1}]},
+      "tags": ["fog-of-war", "survival"]
+    },
+    {
+      "id": "scout-006", "category": "scouting", "title": "Identify enemy composition",
+      "description": "Observe at least three distinct opposing military templates.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "enemy-mixed-army", "seed": 306},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.visible_military_templates", "op": "gte", "value": 3}]},
+      "tags": ["opponent-modeling", "composition"]
+    },
+    {
+      "id": "scout-007", "category": "scouting", "title": "Find expansion site",
+      "description": "Discover one valid expansion site with food, wood, and a buildable civic-centre area.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "fogged-village", "seed": 307},
+      "goal": {"aggregation": "all", "predicates": [{"path": "map.valid_expansion_sites", "op": "gte", "value": 1}]},
+      "tags": ["exploration", "expansion"]
+    },
+    {
+      "id": "scout-008", "category": "scouting", "title": "Detect forward barracks",
+      "description": "Reveal the hidden enemy forward barracks before the attack timer expires.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "hidden-forward-base", "seed": 308},
+      "budget": {"max_steps": 250, "max_agent_actions": 25, "max_tokens": 25000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.visible_structures.barracks", "op": "gte", "value": 1, "scope": "max"}]},
+      "tags": ["detection", "timed"]
+    },
+    {
+      "id": "scout-009", "category": "scouting", "title": "Return scout safely",
+      "description": "Visit the marked location and return the scout to the home radius alive.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "scout-waypoint", "seed": 309},
+      "goal": {"aggregation": "all", "predicates": [{"path": "events.scout_reached_waypoint", "op": "eq", "value": true, "scope": "any"}, {"path": "events.scout_returned_home", "op": "eq", "value": true, "scope": "any"}]},
+      "tags": ["navigation", "survival"]
+    },
+    {
+      "id": "scout-010", "split": "evaluation", "category": "scouting", "title": "Continuous reconnaissance",
+      "description": "Reveal the enemy base and update enemy military visibility after five minutes.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "fogged-village", "seed": 310},
+      "budget": {"max_steps": 600, "max_agent_actions": 60, "max_tokens": 60000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.visible_structure_count", "op": "gte", "value": 1, "scope": "max"}, {"path": "opponent.last_seen_game_time_ms", "op": "gte", "value": 300000}]},
+      "tags": ["opponent-modeling", "long-horizon"]
+    },
+
+    {
+      "id": "combat-001", "category": "combat", "title": "Defeat a small raid",
+      "description": "Eliminate a five-unit raid and keep the civic centre alive.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "incoming-small-raid", "seed": 401},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.unit_count", "op": "lte", "value": 0}, {"path": "player.structures.civil_centre", "op": "gte", "value": 1}]},
+      "tags": ["defense", "micro"]
+    },
+    {
+      "id": "combat-002", "category": "combat", "title": "Win an even skirmish",
+      "description": "Defeat an equal-sized enemy squad while retaining one friendly unit.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "even-skirmish", "seed": 402},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.unit_count", "op": "lte", "value": 0}, {"path": "player.unit_count", "op": "gte", "value": 1}]},
+      "tags": ["micro", "survival"]
+    },
+    {
+      "id": "combat-003", "category": "combat", "title": "Focus fire",
+      "description": "Destroy the marked high-value unit before losing half the friendly squad.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "focus-fire", "seed": 403},
+      "goal": {"aggregation": "all", "predicates": [{"path": "events.priority_target_destroyed", "op": "eq", "value": true, "scope": "any"}, {"path": "player.statistics.units_lost", "op": "lte", "value": 4}]},
+      "tags": ["micro", "targeting"]
+    },
+    {
+      "id": "combat-004", "category": "combat", "title": "Retreat from disadvantage",
+      "description": "Withdraw an outnumbered squad and preserve at least 70 percent of it.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "outnumbered-squad", "seed": 404},
+      "goal": {"aggregation": "all", "predicates": [{"path": "events.squad_reached_safe_zone", "op": "eq", "value": true, "scope": "any"}, {"path": "player.unit_count", "op": "gte", "value": 7}]},
+      "tags": ["micro", "retreat"]
+    },
+    {
+      "id": "combat-005", "category": "combat", "title": "Destroy a barracks",
+      "description": "Destroy the designated enemy barracks and retain an active army.",
+      "scenario": {"fixture": "assault-barracks", "seed": 405},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.structures.barracks", "op": "lte", "value": 0}, {"path": "player.unit_count", "op": "gte", "value": 1}]},
+      "tags": ["assault", "structure"]
+    },
+    {
+      "id": "combat-006", "category": "combat", "title": "Protect workers",
+      "description": "Defeat the attackers while losing no more than two workers.",
+      "scenario": {"fixture": "worker-raid", "seed": 406},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.unit_count", "op": "lte", "value": 0}, {"path": "player.statistics.workers_lost", "op": "lte", "value": 2}]},
+      "tags": ["defense", "economy"]
+    },
+    {
+      "id": "combat-007", "category": "combat", "title": "Counter cavalry",
+      "description": "Defeat a cavalry raid using the available counter units.",
+      "scenario": {"fixture": "cavalry-counter", "seed": 407},
+      "goal": {"aggregation": "all", "predicates": [{"path": "opponent.units.cavalry", "op": "lte", "value": 0}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["composition", "defense"]
+    },
+    {
+      "id": "combat-008", "category": "combat", "title": "Hold two fronts",
+      "description": "Keep both marked structures alive during simultaneous attacks.",
+      "scenario": {"fixture": "two-front-defense", "seed": 408},
+      "budget": {"max_steps": 450, "max_agent_actions": 45, "max_tokens": 45000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.civil_centre", "op": "gte", "value": 1}, {"path": "player.structures.storehouse", "op": "gte", "value": 1}, {"path": "events.attack_timer_complete", "op": "eq", "value": true, "scope": "any"}]},
+      "tags": ["multi-front", "defense"]
+    },
+    {
+      "id": "combat-009", "category": "combat", "title": "Execute an early rush",
+      "description": "Destroy an enemy economic structure before five simulated minutes.",
+      "scenario": {"fixture": "rush-ready", "seed": 409},
+      "budget": {"max_steps": 500, "max_agent_actions": 50, "max_tokens": 50000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "events.enemy_economic_structure_destroyed", "op": "eq", "value": true, "scope": "any"}, {"path": "game_time_ms", "op": "lte", "value": 300000}]},
+      "tags": ["rush", "timed"]
+    },
+    {
+      "id": "combat-010", "split": "evaluation", "category": "combat", "title": "Conquest match",
+      "description": "Defeat PetraBot under the standard conquest victory condition.",
+      "scenario": {"fixture": "fresh-village", "seed": 410},
+      "budget": {"max_steps": 2000, "decision_interval": 20, "max_agent_actions": 100, "max_tokens": 100000, "max_mean_latency_ms": 10000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.state", "op": "eq", "value": "won"}, {"path": "opponent.state", "op": "eq", "value": "defeated"}]},
+      "tags": ["full-game", "conquest"]
+    },
+
+    {
+      "id": "adapt-001", "category": "adaptive", "title": "Recover from worker loss",
+      "description": "Recover the workforce after five workers are removed mid-episode.",
+      "scenario": {"fixture": "developing-economy", "seed": 501},
+      "perturbations": [{"at_step": 150, "type": "remove_units", "parameters": {"owner": 1, "role": "worker", "count": 5}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.statistics.worker_count", "op": "gte", "value": 12}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["perturbation", "recovery"]
+    },
+    {
+      "id": "adapt-002", "category": "adaptive", "title": "Replace depleted woodline",
+      "description": "Resume wood income after the assigned wood resource is removed.",
+      "scenario": {"fixture": "wood-economy", "seed": 502},
+      "perturbations": [{"at_step": 120, "type": "remove_resource", "parameters": {"resource": "wood", "cluster": "assigned"}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resource_gatherers.wood", "op": "gte", "value": 4}, {"path": "player.resources.wood", "op": "gte", "value": 250}]},
+      "tags": ["perturbation", "resource"]
+    },
+    {
+      "id": "adapt-003", "category": "adaptive", "title": "Respond to cavalry switch",
+      "description": "Detect an enemy cavalry composition switch and field counter units.",
+      "scenario": {"fixture": "composition-response", "seed": 503},
+      "perturbations": [{"at_step": 150, "type": "change_enemy_composition", "parameters": {"composition": "cavalry"}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.statistics.cavalry_counter_units", "op": "gte", "value": 8}, {"path": "player.state", "op": "eq", "value": "active"}]},
+      "tags": ["perturbation", "opponent-modeling"]
+    },
+    {
+      "id": "adapt-004", "category": "adaptive", "title": "Rebuild barracks",
+      "description": "Restore infantry production after the primary barracks is destroyed.",
+      "scenario": {"fixture": "barracks-economy", "seed": 504},
+      "perturbations": [{"at_step": 120, "type": "destroy_structure", "parameters": {"owner": 1, "template": "barracks", "count": 1}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.structures.barracks", "op": "gte", "value": 1}, {"path": "player.statistics.infantry_trained_after_perturbation", "op": "gte", "value": 3}]},
+      "tags": ["perturbation", "construction"]
+    },
+    {
+      "id": "adapt-005", "category": "adaptive", "title": "Defend secondary base",
+      "description": "Redirect forces to defeat a surprise attack on the secondary base.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "two-base-defense", "seed": 505},
+      "perturbations": [{"at_step": 160, "type": "spawn_attack", "parameters": {"target": "secondary_base", "composition": "infantry", "count": 10}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.statistics.secondary_civic_centres", "op": "gte", "value": 1}, {"path": "events.surprise_attack_defeated", "op": "eq", "value": true, "scope": "any"}]},
+      "tags": ["perturbation", "multi-front"]
+    },
+    {
+      "id": "adapt-006", "category": "adaptive", "title": "Recover from food shock",
+      "description": "Restore food production after stored food and nearby food sources are reduced.",
+      "scenario": {"fixture": "food-economy", "seed": 506},
+      "perturbations": [{"at_step": 140, "type": "resource_shock", "parameters": {"resource": "food", "stored_fraction_remaining": 0.1, "remove_nearby_nodes": true}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.resource_gatherers.food", "op": "gte", "value": 6}, {"path": "player.resources.food", "op": "gte", "value": 250}]},
+      "tags": ["perturbation", "economy"]
+    },
+    {
+      "id": "adapt-007", "category": "adaptive", "title": "Reroute around blockage",
+      "description": "Reach the target after the original route is blocked during movement.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "route-planning", "seed": 507},
+      "perturbations": [{"at_step": 80, "type": "block_route", "parameters": {"route": "primary"}}],
+      "goal": {"aggregation": "all", "predicates": [{"path": "events.target_reached", "op": "eq", "value": true, "scope": "any"}, {"path": "player.unit_count", "op": "gte", "value": 1}]},
+      "tags": ["perturbation", "navigation"]
+    },
+    {
+      "id": "adapt-008", "category": "adaptive", "title": "Counter second-wave siege",
+      "description": "Survive an infantry attack followed by an unseen siege wave.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "wave-defense", "seed": 508},
+      "perturbations": [{"at_step": 220, "type": "spawn_attack", "parameters": {"target": "primary_base", "composition": "siege", "count": 4}}],
+      "budget": {"max_steps": 500, "max_agent_actions": 50, "max_tokens": 50000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "events.second_wave_defeated", "op": "eq", "value": true, "scope": "any"}, {"path": "player.structures.civil_centre", "op": "gte", "value": 1}]},
+      "tags": ["perturbation", "combat"]
+    },
+    {
+      "id": "adapt-009", "category": "adaptive", "title": "Replan after expansion loss",
+      "description": "Establish a replacement expansion after the intended site becomes unavailable.",
+      "scenario": {"fixture": "expansion-ready", "seed": 509},
+      "perturbations": [{"at_step": 120, "type": "block_route", "parameters": {"route": "planned_expansion"}}, {"at_step": 140, "type": "remove_resource", "parameters": {"resource": "food", "cluster": "planned_expansion"}}],
+      "budget": {"max_steps": 600, "max_agent_actions": 60, "max_tokens": 60000},
+      "goal": {"aggregation": "all", "predicates": [{"path": "player.statistics.secondary_civic_centres", "op": "gte", "value": 1}, {"path": "events.alternate_expansion_used", "op": "eq", "value": true, "scope": "any"}]},
+      "tags": ["perturbation", "planning"]
+    },
+    {
+      "id": "adapt-010", "split": "evaluation", "category": "adaptive", "title": "Compound recovery",
+      "description": "Recover from worker loss, resource loss, and a delayed attack in one episode.",
+      "tracks": ["symbolic", "vision", "hybrid"], "scenario": {"fixture": "developing-economy", "seed": 510},
+      "perturbations": [{"at_step": 120, "type": "remove_units", "parameters": {"owner": 1, "role": "worker", "count": 4}}, {"at_step": 200, "type": "remove_resource", "parameters": {"resource": "wood", "cluster": "assigned"}}, {"at_step": 300, "type": "spawn_attack", "parameters": {"target": "primary_base", "composition": "mixed", "count": 12}}],
+      "budget": {"max_steps": 700, "decision_interval": 10, "max_agent_actions": 70, "max_tokens": 70000, "max_mean_latency_ms": 5000},
+      "goal": {"aggregation": "fraction", "predicates": [{"path": "player.state", "op": "eq", "value": "active"}, {"path": "player.statistics.worker_count", "op": "gte", "value": 12}, {"path": "player.resources.wood", "op": "gte", "value": 250}, {"path": "events.final_attack_defeated", "op": "eq", "value": true, "scope": "any"}]},
+      "tags": ["perturbation", "compound", "long-horizon"]
+    }
+  ]
+}

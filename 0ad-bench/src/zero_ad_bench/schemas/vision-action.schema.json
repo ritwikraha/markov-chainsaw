@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0ad-bench.org/schemas/v0.1/vision-action.schema.json",
+  "title": "0AD-Bench vision control event",
+  "type": "object",
+  "required": ["type"],
+  "properties": {
+    "type": {"enum": ["pointer_move", "pointer_click", "pointer_drag", "key_press", "wait"]},
+    "x": {"type": "integer", "minimum": 0},
+    "y": {"type": "integer", "minimum": 0},
+    "end_x": {"type": "integer", "minimum": 0},
+    "end_y": {"type": "integer", "minimum": 0},
+    "button": {"enum": ["left", "middle", "right"]},
+    "key": {"type": "string"},
+    "modifiers": {"type": "array", "items": {"enum": ["shift", "control", "alt", "meta"]}, "uniqueItems": true},
+    "duration_ms": {"type": "integer", "minimum": 0, "maximum": 30000}
+  },
+  "allOf": [
+    {"if": {"properties": {"type": {"const": "pointer_move"}}}, "then": {"required": ["x", "y"]}},
+    {"if": {"properties": {"type": {"const": "pointer_click"}}}, "then": {"required": ["x", "y", "button"]}},
+    {"if": {"properties": {"type": {"const": "pointer_drag"}}}, "then": {"required": ["x", "y", "end_x", "end_y", "button"]}},
+    {"if": {"properties": {"type": {"const": "key_press"}}}, "then": {"required": ["key"]}}
+  ],
+  "additionalProperties": false
+}
