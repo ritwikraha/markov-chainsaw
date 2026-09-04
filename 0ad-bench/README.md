@@ -33,6 +33,8 @@ The package and notebook validation record is available in [VALIDATION.md](./VAL
 
 Run [notebooks/oss_model_comparison.ipynb](./notebooks/oss_model_comparison.ipynb) on an L4 GPU. Set the `HF_WRITE_ACCESS` Colab secret for gated Gemma access. `WANDB_KEY` enables optional summary logging.
 
+The verified L4 run and its 60 raw episode trajectories are in [reports/oss-model-comparison-v0.1](./reports/oss-model-comparison-v0.1/REPORT.md). Ministral 3 completed 15 of 15 probes, Gemma 4 completed 14, Phi-4 Mini completed 9, and Qwen3.5 completed 5 under the strict action schema.
+
 ## Task suite
 
 | Category | Tasks | Primary capability |

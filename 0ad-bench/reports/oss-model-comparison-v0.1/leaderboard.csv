@@ -1,0 +1,5 @@
+rank,model,correct,probe_count,accuracy,legal_action_rate,mean_latency_ms,total_tokens,status
+1,mistralai/Ministral-3-3B-Instruct-2512-BF16,15,15,1.0,1.0,1479.59,4106,complete
+2,google/gemma-4-E2B-it,14,15,0.9333,1.0,1909.33,3941,complete
+3,microsoft/Phi-4-mini-instruct,9,15,0.6,0.6667,1638.23,3600,complete
+4,Qwen/Qwen3.5-4B,5,15,0.3333,0.5333,2923.0,4008,complete
