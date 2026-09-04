@@ -14,10 +14,24 @@ Version 0.1 provides:
 - Complete trajectory recording.
 - A macro-action adapter for the official `zero_ad` RL client.
 - A Colab notebook for catalog inspection, scoring, and smoke evaluation.
+- A Colab-ready OSS model comparison with 15 deterministic symbolic probes.
 
 The package and notebook validation record is available in [VALIDATION.md](./VALIDATION.md).
 
 [![Open 0AD-Bench v0.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ritwikraha/markov-chainsaw/blob/0ad-bench-v0.1/0ad-bench/notebooks/0ad_bench_v0_1.ipynb)
+
+[![Open OSS model comparison in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ritwikraha/markov-chainsaw/blob/0ad-bench-v0.1/0ad-bench/notebooks/oss_model_comparison.ipynb)
+
+## OSS model comparison
+
+- Runs Gemma 4 E2B Instruct, Qwen3.5 4B, Ministral 3 3B Instruct, and Phi-4 Mini Instruct.
+- Uses the same 15 probes, prompt format, deterministic decoding, action budget, and scoring inputs for every model.
+- Covers three decisions in each benchmark category.
+- Loads one model at a time so the matrix fits a Colab Pro L4 runtime.
+- Writes complete per-episode trajectories, JSON results, a CSV leaderboard, and a Markdown report.
+- Labels the results as model-compatibility probes rather than engine-backed 0 A.D. scores.
+
+Run [notebooks/oss_model_comparison.ipynb](./notebooks/oss_model_comparison.ipynb) on an L4 GPU. Set the `HF_WRITE_ACCESS` Colab secret for gated Gemma access. `WANDB_KEY` enables optional summary logging.
 
 ## Task suite
 

@@ -2,6 +2,7 @@
 
 from .leaderboard import aggregate_leaderboard, leaderboard_markdown
 from .models import AgentDecision, EpisodeMetrics, TaskSpec, Transition
+from .probes import ProbeCase, ProbeEnvironment, default_probe_cases, summarize_probe_results
 from .registry import TaskRegistry
 from .runner import BenchmarkRunner
 from .scoring import ScoreBreakdown, score_episode
@@ -14,11 +15,15 @@ __all__ = [
     "BenchmarkRunner",
     "EpisodeMetrics",
     "EpisodeRecorder",
+    "ProbeCase",
+    "ProbeEnvironment",
     "ScoreBreakdown",
     "TaskRegistry",
     "TaskSpec",
     "Transition",
     "aggregate_leaderboard",
+    "default_probe_cases",
     "leaderboard_markdown",
     "score_episode",
+    "summarize_probe_results",
 ]
