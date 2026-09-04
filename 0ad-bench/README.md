@@ -15,6 +15,8 @@ Version 0.1 provides:
 - A macro-action adapter for the official `zero_ad` RL client.
 - A Colab notebook for catalog inspection, scoring, and smoke evaluation.
 
+The package and notebook validation record is available in [VALIDATION.md](./VALIDATION.md).
+
 [![Open 0AD-Bench v0.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ritwikraha/markov-chainsaw/blob/0ad-bench-v0.1/0ad-bench/notebooks/0ad_bench_v0_1.ipynb)
 
 ## Task suite
