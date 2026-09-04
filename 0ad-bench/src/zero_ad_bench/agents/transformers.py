@@ -46,15 +46,17 @@ class TransformersJSONAgent:
         self.max_new_tokens = max_new_tokens
         self._torch = torch
         dtype = getattr(torch, torch_dtype)
+        effective_trust_remote_code = trust_remote_code and not model_id.startswith("microsoft/Phi-4")
         common = {
             "device_map": device_map,
-            "torch_dtype": dtype,
+            "dtype": dtype,
             "token": token,
-            "trust_remote_code": trust_remote_code,
+            "trust_remote_code": effective_trust_remote_code,
             "low_cpu_mem_usage": True,
         }
-        config = AutoConfig.from_pretrained(model_id, token=token, trust_remote_code=trust_remote_code)
+        config = AutoConfig.from_pretrained(model_id, token=token, trust_remote_code=effective_trust_remote_code)
         model_type = str(getattr(config, "model_type", ""))
+        self.model_type = model_type
         self.is_multimodal = model_type in {"gemma4", "qwen3_5", "mistral3"}
         if self.is_multimodal:
             try:
@@ -62,10 +64,13 @@ class TransformersJSONAgent:
                 self.model = AutoModelForMultimodalLM.from_pretrained(model_id, **common)
             except (ImportError, ValueError):
                 self.model = AutoModelForCausalLM.from_pretrained(model_id, **common)
-            self.processor = AutoProcessor.from_pretrained(model_id, token=token, trust_remote_code=trust_remote_code)
+            processor_options = {"token": token, "trust_remote_code": effective_trust_remote_code}
+            if model_type == "mistral3":
+                processor_options["fix_mistral_regex"] = True
+            self.processor = AutoProcessor.from_pretrained(model_id, **processor_options)
         else:
             self.model = AutoModelForCausalLM.from_pretrained(model_id, **common)
-            self.processor = AutoTokenizer.from_pretrained(model_id, token=token, trust_remote_code=trust_remote_code)
+            self.processor = AutoTokenizer.from_pretrained(model_id, token=token, trust_remote_code=effective_trust_remote_code)
         self.model.eval()
 
     @staticmethod
@@ -95,6 +100,7 @@ class TransformersJSONAgent:
             {"role": "user", "content": [{"type": "text", "text": prompt}]},
         ]
         messages = multimodal_messages if self.is_multimodal else text_messages
+        template_options = {"enable_thinking": False} if self.model_type == "qwen3_5" else {}
         try:
             inputs = self.processor.apply_chat_template(
                 messages,
@@ -102,6 +108,7 @@ class TransformersJSONAgent:
                 tokenize=True,
                 return_dict=True,
                 return_tensors="pt",
+                **template_options,
             )
         except (TypeError, ValueError):
             inputs = self.processor.apply_chat_template(
@@ -110,6 +117,7 @@ class TransformersJSONAgent:
                 tokenize=True,
                 return_dict=True,
                 return_tensors="pt",
+                **template_options,
             )
         return {key: value.to(self.model.device) for key, value in inputs.items()}
 
@@ -143,4 +151,3 @@ class TransformersJSONAgent:
         del self.model
         if self._torch.cuda.is_available():
             self._torch.cuda.empty_cache()
-
