@@ -1,0 +1,13 @@
+{
+  "task_reward": 1.0,
+  "economy_reward": 0.8,
+  "military_reward": 0.4,
+  "survival_reward": 1.0,
+  "action_count": 25,
+  "illegal_action_count": 1,
+  "prompt_tokens": 8000,
+  "completion_tokens": 1200,
+  "latency_ms_total": 30000,
+  "completed_steps": 300,
+  "wall_clock_seconds": 95.2
+}

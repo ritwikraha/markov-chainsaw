@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0ad-bench.org/schemas/v0.1/leaderboard.schema.json",
+  "title": "0AD-Bench leaderboard row",
+  "type": "object",
+  "required": ["agent", "track", "episodes", "mean_score", "median_score", "success_rate", "mean_actions", "mean_tokens", "mean_latency_ms", "illegal_action_rate", "category_scores"],
+  "properties": {
+    "agent": {"type": "string"},
+    "track": {"enum": ["symbolic", "vision", "hybrid"]},
+    "episodes": {"type": "integer", "minimum": 1},
+    "mean_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "median_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "success_rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "mean_actions": {"type": "number", "minimum": 0},
+    "mean_tokens": {"type": "number", "minimum": 0},
+    "mean_latency_ms": {"type": "number", "minimum": 0},
+    "illegal_action_rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "category_scores": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0, "maximum": 100}}
+  },
+  "additionalProperties": false
+}

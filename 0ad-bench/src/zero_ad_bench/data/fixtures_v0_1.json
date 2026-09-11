@@ -1,0 +1,33 @@
+{
+  "benchmark_version": "0.1",
+  "engine": "0 A.D. 0.28.x",
+  "base_map": "maps/scenarios/arcadia",
+  "fixtures": [
+    {"id": "fresh-village", "setup": "Standard civic centre, starting units, starting resources, and no retained episode state."},
+    {"id": "village-with-storehouse", "setup": "Fresh village with one completed storehouse and resources for one economy technology."},
+    {"id": "town-ready", "setup": "Village economy with phase requirements met and the town-phase action available."},
+    {"id": "fogged-village", "setup": "Fresh village with normal fog of war and benchmark exploration telemetry enabled."},
+    {"id": "dedicated-scout", "setup": "Fogged map with one designated cavalry scout and a protected home radius."},
+    {"id": "enemy-mixed-army", "setup": "Fogged opponent area containing three deterministic military templates."},
+    {"id": "hidden-forward-base", "setup": "Enemy barracks placed outside the initial vision radius with a fixed attack timer."},
+    {"id": "scout-waypoint", "setup": "One designated scout, one distant waypoint, and benchmark return-zone triggers."},
+    {"id": "incoming-small-raid", "setup": "Player base with defenders and a deterministic five-unit incoming raid."},
+    {"id": "even-skirmish", "setup": "Two equal squads positioned within engagement distance."},
+    {"id": "focus-fire", "setup": "Friendly squad facing a mixed enemy group with one marked priority unit."},
+    {"id": "outnumbered-squad", "setup": "Ten friendly units facing a larger army with a marked safe zone."},
+    {"id": "assault-barracks", "setup": "Friendly assault force positioned near one designated enemy barracks."},
+    {"id": "worker-raid", "setup": "Active economy with a deterministic raid targeting worker positions."},
+    {"id": "cavalry-counter", "setup": "Available spear infantry facing a deterministic cavalry raid."},
+    {"id": "two-front-defense", "setup": "Two marked friendly structures with synchronized attacks from different directions."},
+    {"id": "rush-ready", "setup": "Fresh economy with nearby opponent and deterministic early-attack conditions."},
+    {"id": "developing-economy", "setup": "Twelve-worker economy with deterministic resource assignments and perturbation hooks."},
+    {"id": "wood-economy", "setup": "Economy assigned to one marked wood cluster with an alternate cluster available."},
+    {"id": "composition-response", "setup": "Defensive economy with enemy-composition telemetry and a deterministic switch hook."},
+    {"id": "barracks-economy", "setup": "Economy with one primary barracks and enough resources to replace it."},
+    {"id": "two-base-defense", "setup": "Primary and secondary bases with target-specific attack triggers."},
+    {"id": "food-economy", "setup": "Food-focused economy with marked stored resources and removable nearby food nodes."},
+    {"id": "route-planning", "setup": "Squad, target zone, primary route, and deterministic alternate route."},
+    {"id": "wave-defense", "setup": "Base prepared for an infantry wave followed by a trigger-controlled siege wave."},
+    {"id": "expansion-ready", "setup": "Economy able to expand with primary and alternate deterministic expansion sites."}
+  ]
+}

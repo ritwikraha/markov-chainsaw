@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0ad-bench.org/schemas/v0.1/episode-summary.schema.json",
+  "title": "0AD-Bench episode summary",
+  "type": "object",
+  "required": ["schema_version", "episode_id", "task_id", "category", "track", "agent", "seed", "success", "metrics", "score", "final_observation", "final_evaluation_observation"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "episode_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "category": {"type": "string"},
+    "track": {"enum": ["symbolic", "vision", "hybrid"]},
+    "agent": {"type": "string"},
+    "seed": {"type": "integer"},
+    "success": {"type": "boolean"},
+    "metrics": {"type": "object"},
+    "score": {"type": "object", "required": ["total"]},
+    "final_observation": {"type": "object"},
+    "final_evaluation_observation": {"type": "object"},
+    "replay": {"type": "string"}
+  },
+  "additionalProperties": true
+}

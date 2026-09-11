@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0ad-bench.org/schemas/v0.1/observation.schema.json",
+  "title": "0AD-Bench observation",
+  "type": "object",
+  "required": ["schema_version", "episode_id", "step", "game_time_ms", "track", "events"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "episode_id": {"type": "string"},
+    "step": {"type": "integer", "minimum": 0},
+    "game_time_ms": {"type": "integer", "minimum": 0},
+    "track": {"enum": ["symbolic", "vision", "hybrid"]},
+    "frame_path": {"type": "string"},
+    "player": {"$ref": "#/$defs/player"},
+    "opponent": {"$ref": "#/$defs/player"},
+    "map": {"type": "object"},
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "owner", "template", "visible"],
+        "properties": {
+          "id": {"type": "integer"},
+          "owner": {"type": "integer"},
+          "template": {"type": "string"},
+          "position": {"type": ["array", "null"], "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+          "visible": {"type": "boolean"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "events": {"type": "object"},
+    "event_log": {"type": "array"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"track": {"const": "symbolic"}}},
+      "then": {"required": ["player", "opponent", "entities"]}
+    },
+    {
+      "if": {"properties": {"track": {"const": "vision"}}},
+      "then": {"required": ["frame_path"]}
+    },
+    {
+      "if": {"properties": {"track": {"const": "hybrid"}}},
+      "then": {"required": ["frame_path", "player", "opponent", "entities"]}
+    }
+  ],
+  "$defs": {
+    "player": {
+      "type": "object",
+      "required": ["id", "state", "phase", "resources", "population", "units", "structures"],
+      "properties": {
+        "id": {"type": "integer"},
+        "state": {"type": "string"},
+        "phase": {"type": "string"},
+        "resources": {"type": "object", "additionalProperties": {"type": "number"}},
+        "resource_gatherers": {"type": "object", "additionalProperties": {"type": "number"}},
+        "population": {
+          "type": "object",
+          "required": ["used", "limit"],
+          "properties": {"used": {"type": "number"}, "limit": {"type": "number"}}
+        },
+        "units": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "unit_count": {"type": "integer"},
+        "structures": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "structure_count": {"type": "integer"},
+        "statistics": {"type": "object"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

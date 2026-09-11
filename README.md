@@ -4,6 +4,7 @@ Reinforcement Learning Lab for all my weird experiments
 ## Experiments
 
 - [Age of LLMs](./age-of-llms/): Gemma 4 controls a real 0 A.D. Release 28 match and exports a native gameplay video and replay.
+- [0AD-Bench](./0ad-bench/): v0.1 test bench with 50 deterministic RTS tasks, three observation tracks, scoring, trajectories, and leaderboard tooling.
 
 ### Experiment ordering
 
